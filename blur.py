@@ -89,7 +89,7 @@ async def blur_photo(msg_id):
         async for message in client.iter_messages(CHANNEL_ID, ids=msg_id):
             if message and message.photo:
                 print(f"Blurring photo for message ID: {msg_id}")
-                photo = await message.download_media(file=BytesIO())
+                photo = await message.download_media()
                 temp_file = blur_image(photo)
 
                 with open(temp_file, 'rb') as f:
