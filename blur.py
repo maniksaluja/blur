@@ -11,10 +11,7 @@ MONGO_URL = "mongodb+srv://manik:manik11@cluster0.iam3w.mongodb.net/?retryWrites
 client = MongoClient(MONGO_URL)
 db = client['your_database_name']  # Replace with your database name
 collection = db['photos_collection']  # Collection for photos
-
-# Create index for TTL only if it doesn't exist
-if not collection.index_information().get("timestamp"):
-    collection.create_index([("timestamp", 1)], expireAfterSeconds=2592000)  # TTL: 30 days
+collection.create_index([("timestamp", 1)], expireAfterSeconds=2592000)  # TTL: 30 days
 
 # Telegram Bot Setup
 api_id = '26980824'
@@ -147,16 +144,6 @@ async def main():
     asyncio.create_task(process_delay_tasks())
     await client.run_until_disconnected()
 
-# Use await directly instead of asyncio.run()
-# Start the bot and process delay tasks
-async def main():
-    await client.start()
-    print("Bot started.")
-    asyncio.create_task(process_delay_tasks())
-    await client.run_until_disconnected()
-
-# Ye line ko replace karen:
-# await main()
-
+# Ensure to run main inside asyncio event loop
 if __name__ == "__main__":
-    asyncio.run(main())  # This is correct way to run async main
+    asyncio.run(main())  # Correct way to run async code
