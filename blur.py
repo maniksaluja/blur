@@ -146,4 +146,5 @@ async def main():
 
 # Ensure to run main inside asyncio event loop
 if __name__ == "__main__":
-    asyncio.run(main())  # Correct way to run async code
+    loop = asyncio.get_event_loop()  # Ensure the event loop is available
+    loop.run_until_complete(main())  # Run the main function correctly
