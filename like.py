@@ -1,5 +1,5 @@
 from telegram import Update, Bot
-from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, filters
 
 TOKEN = '7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI'
 CHAT_ID = '-1002374330304'
@@ -17,7 +17,7 @@ def main():
     dispatcher = updater.dispatcher
 
     # Handler to react to new channel posts
-    dispatcher.add_handler(MessageHandler(Filters.channel_post, send_reaction))
+    dispatcher.add_handler(MessageHandler(filters.ChannelPost(), send_reaction))
 
     updater.start_polling()
     updater.idle()
