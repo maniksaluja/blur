@@ -1,30 +1,65 @@
-from telethon import TelegramClient, events
-from telethon.tl.types import InputPeerChannel
+import time
+import requests
+import logging
 
-api_id = '26980824'  # Replace with your API ID
-api_hash = 'fb044056059384d3bea54ab7ce915226'  # Replace with your API Hash
-bot_token = "7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI"
-channel_id = -1002374330304  # Your channel ID
+# Logging setup kar rahe hain
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-client = TelegramClient('my_bot', api_id, api_hash).start(bot_token=bot_token)
+TOKEN = '7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI'
+CHAT_ID = '-1002374330304'
+LIKE_EMOJI = '👍'
+DISLIKE_EMOJI = '👎'
+API_URL = f"https://api.telegram.org/bot{TOKEN}"
 
-# Monitor for new messages in the channel
-@client.on(events.NewMessage(chats=channel_id))
-async def handler(event):
-    message = event.message
-    print(f"New message ID: {message.id} received")
-    
+def send_reaction(chat_id, message_id, emoji):
+    url = f"{API_URL}/sendMessage"
+    payload = {
+        'chat_id': chat_id,
+        'text': emoji,
+        'reply_to_message_id': message_id
+    }
+    logging.info(f"Sending {emoji} to message ID {message_id}")
     try:
-        # Add reactions (like/dislike) to every new post
-        await message.add_reaction("👍")  # Like reaction
-        await message.add_reaction("👎")  # Dislike reaction
-        print(f"Reactions added to message ID: {message.id}")
-    
+        response = requests.post(url, data=payload)
+        response_data = response.json()
+        if response_data.get('ok'):
+            logging.info(f"Sent {emoji} to message ID {message_id} successfully.")
+        else:
+            logging.error(f"Failed to send {emoji} to message ID {message_id}. Error: {response_data.get('description')}")
+        return response_data
     except Exception as e:
-        print(f"Error: {e}")
-        await asyncio.sleep(10)  # Sleep for 10 seconds before retrying
-        print("Retrying after 10 seconds...")
+        logging.error(f"Exception occurred while sending {emoji} to message ID {message_id}: {e}")
 
-client.start()
-print("Bot is running...")
-client.run_until_disconnected()
+def get_updates(offset=None):
+    url = f"{API_URL}/getUpdates"
+    params = {'offset': offset, 'timeout': 100}
+    logging.info("Fetching updates")
+    try:
+        response = requests.get(url, params=params)
+        response_data = response.json()
+        if response_data.get('ok'):
+            logging.info("Fetched updates successfully.")
+        else:
+            logging.error(f"Failed to fetch updates. Error: {response_data.get('description')}")
+        return response_data
+    except Exception as e:
+        logging.error(f"Exception occurred while fetching updates: {e}")
+        return {}
+
+def monitor_channel():
+    last_update_id = None
+    while True:
+        logging.info("Checking for new updates")
+        updates = get_updates(last_update_id)
+        if updates.get("ok"):
+            for update in updates["result"]:
+                if "channel_post" in update:
+                    message = update["channel_post"]
+                    message_id = message["message_id"]
+                    logging.info(f"New message found with ID {message_id}")
+                    send_reaction(CHAT_ID, message_id, LIKE_EMOJI)
+                    send_reaction(CHAT_ID, message_id, DISLIKE_EMOJI)
+                last_update_id = update["update_id"] + 1
+        time.sleep(1)  # Rate limit exceed na ho, isliye sleep kar rahe hain
+
+monitor_channel()
