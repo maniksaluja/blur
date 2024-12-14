@@ -66,19 +66,22 @@ def delete_photo_data(message_id):
 # Forward photo to USER_ID with buttons
 @client.on(events.NewMessage(chats=CHANNEL_ID))
 async def forward_media_to_user(event):
-    if event.photo:
-        print(f"New photo detected in channel (ID: {event.id})")
-        forwarded_msg = await client.forward_messages(USER_ID, event.message)
-        print("Photo forwarded to USER_ID")
+    if not event.photo:  # Ignore non-photo messages
+        print(f"Ignored non-photo message (ID: {event.id})")
+        return
 
-        blur_button_msg = await client.send_message(
-            USER_ID,
-            "Photo forwarded to you. Do you want to blur it?",
-            buttons=[Button.inline("Blur", data=str(event.id)), Button.inline("Delay Blur", data=f"delay_{event.id}")]
-        )
+    print(f"New photo detected in channel (ID: {event.id})")
+    forwarded_msg = await client.forward_messages(USER_ID, event.message)
+    print("Photo forwarded to USER_ID")
 
-        forwarded_message_ids[event.id] = (forwarded_msg.id, blur_button_msg.id)
-        insert_photo_data(event.id)
+    blur_button_msg = await client.send_message(
+        USER_ID,
+        "Photo forwarded to you. Do you want to blur it?",
+        buttons=[Button.inline("Blur", data=str(event.id)), Button.inline("Delay Blur", data=f"delay_{event.id}")]
+    )
+
+    forwarded_message_ids[event.id] = (forwarded_msg.id, blur_button_msg.id)
+    insert_photo_data(event.id)
 
 # Blur photo instantly
 async def blur_photo(msg_id):
