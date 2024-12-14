@@ -32,6 +32,20 @@ def get_db_connection():
     conn.execute('PRAGMA journal_mode=WAL')  # Enable WAL mode
     return conn
 
+def execute_with_retry(cursor, query, params=(), retries=5, delay=0.1):
+    for attempt in range(retries):
+        try:
+            cursor.execute(query, params)
+            return
+        except OperationalError as e:
+            if "database is locked" in str(e):
+                if attempt < retries - 1:
+                    time.sleep(delay)
+                else:
+                    raise
+            else:
+                raise
+
 # Helper to blur images
 def blur_image(image_data):
     img = Image.open(image_data)
@@ -61,8 +75,8 @@ def update_blurred_status(message_id):
     conn = get_db_connection()
     c = conn.cursor()
     try:
-        c.execute_with_retry("UPDATE photos_collection SET status = 'blurred', blurred_timestamp = ? WHERE message_id = ?",
-                             (int(time.time()), message_id))
+        execute_with_retry(c, "UPDATE photos_collection SET status = ?, blurred_timestamp = ? WHERE message_id = ?",
+                           ('blurred', int(time.time()), message_id))
         conn.commit()
     except OperationalError as e:
         print(f"Database error: {e}")
@@ -75,7 +89,7 @@ def delete_photo_data(message_id):
     conn = get_db_connection()
     c = conn.cursor()
     try:
-        c.execute_with_retry("DELETE FROM photos_collection WHERE message_id = ?", (message_id,))
+        execute_with_retry(c, "DELETE FROM photos_collection WHERE message_id = ?", (message_id,))
         conn.commit()
     except OperationalError as e:
         print(f"Database error: {e}")
