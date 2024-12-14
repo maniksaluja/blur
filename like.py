@@ -3,7 +3,7 @@ from telethon.tl.types import InputPeerChannel
 
 api_id = '26980824'  # Replace with your API ID
 api_hash = 'fb044056059384d3bea54ab7ce915226'  # Replace with your API Hash
-bot_token = "7041654616:AAHqmt9LKjTL9lRAXj8HT_ZkjaWW9I-hz3Q"
+bot_token = "7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI"
 channel_id = -1002374330304  # Your channel ID
 
 client = TelegramClient('my_bot', api_id, api_hash).start(bot_token=bot_token)
