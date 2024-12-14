@@ -1,11 +1,15 @@
 import os
 import time
+import logging
 from pymongo import MongoClient
 from telethon import TelegramClient, events, Button
 from io import BytesIO
 from PIL import Image, ImageFilter
 import asyncio
-import logging
+
+# Logging setup
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # MongoDB Setup
 MONGO_URL = "mongodb+srv://manik:manik11@cluster0.iam3w.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
@@ -50,7 +54,7 @@ def insert_photo_data(message_id, delay=False, delay_time=None):
         "delay_time": delay_time,
     }
     collection.insert_one(data)
-    print(f"Inserted data for photo with message ID {message_id}")
+    logger.info(f"Inserted data for photo with message ID {message_id}")
 
 # Update status to blurred
 def update_blurred_status(message_id):
@@ -58,21 +62,21 @@ def update_blurred_status(message_id):
         {"message_id": message_id},
         {"$set": {"status": "blurred", "blurred_timestamp": int(time.time())}}
     )
-    print(f"Photo with message ID {message_id} marked as blurred")
+    logger.info(f"Photo with message ID {message_id} marked as blurred")
 
 # Delete photo data
 def delete_photo_data(message_id):
     collection.delete_one({"message_id": message_id})
-    print(f"Photo with message ID {message_id} data deleted from database")
+    logger.info(f"Photo with message ID {message_id} data deleted from database")
 
 # Forward photo to USER_ID with buttons
 @client.on(events.NewMessage(chats=CHANNEL_ID))
 async def forward_media_to_user(event):
     if event.photo:
         try:
-            print(f"New photo detected in channel (ID: {event.id})")
+            logger.info(f"New photo detected in channel (ID: {event.id})")
             forwarded_msg = await client.forward_messages(USER_ID, event.message)
-            print("Photo forwarded to USER_ID")
+            logger.info("Photo forwarded to USER_ID")
 
             blur_button_msg = await client.send_message(
                 USER_ID,
@@ -83,20 +87,20 @@ async def forward_media_to_user(event):
             forwarded_message_ids[event.id] = (forwarded_msg.id, blur_button_msg.id)
             insert_photo_data(event.id)
         except Exception as e:
-            print(f"Error in forwarding media: {e}")
+            logger.error(f"Error in forwarding media: {e}")
 
 # Blur photo instantly
 async def blur_photo(msg_id):
     try:
         async for message in client.iter_messages(CHANNEL_ID, ids=msg_id):
             if message and message.photo:
-                print(f"Blurring photo for message ID: {msg_id}")
+                logger.info(f"Blurring photo for message ID: {msg_id}")
                 photo = await message.download_media(file=BytesIO())
                 temp_file = blur_image(photo)
 
                 with open(temp_file, 'rb') as f:
                     await client.edit_message(CHANNEL_ID, msg_id, file=f)
-                print(f"Photo replaced in channel for message ID: {msg_id}")
+                logger.info(f"Photo replaced in channel for message ID: {msg_id}")
 
                 update_blurred_status(msg_id)
                 if msg_id in forwarded_message_ids:
@@ -106,9 +110,9 @@ async def blur_photo(msg_id):
 
                 delete_photo_data(msg_id)
             else:
-                print(f"No photo found for message ID: {msg_id}")
+                logger.warning(f"No photo found for message ID: {msg_id}")
     except Exception as e:
-        print(f"Error blurring photo: {e}")
+        logger.error(f"Error blurring photo: {e}")
 
 # Handle Blur button click
 @client.on(events.CallbackQuery)
@@ -117,17 +121,17 @@ async def handle_callback(event):
         data = event.data.decode('utf-8')
         if data.isdigit():
             msg_id = int(data)
-            print(f"Blur button clicked for message ID: {msg_id}")
+            logger.info(f"Blur button clicked for message ID: {msg_id}")
             await blur_photo(msg_id)
             await event.answer("Photo blurred successfully!")
         elif data.startswith('delay_'):
             msg_id = int(data.split('_')[1])
             delay_time = int(time.time()) + BLUR_DELAY
-            print(f"Delay Blur button clicked for message ID: {msg_id}, scheduled at {delay_time}")
+            logger.info(f"Delay Blur button clicked for message ID: {msg_id}, scheduled at {delay_time}")
             insert_photo_data(msg_id, delay=True, delay_time=delay_time)
             await event.answer(f"Photo will be blurred after {BLUR_DELAY} seconds!")
     except Exception as e:
-        print(f"Error handling callback: {e}")
+        logger.error(f"Error handling callback: {e}")
         await event.answer("Error processing your request.")
 
 # Process delayed blur tasks
@@ -137,7 +141,7 @@ async def process_delay_tasks():
         tasks = collection.find({"delay": True, "delay_time": {"$lte": current_time}})
         for task in tasks:
             msg_id = task["message_id"]
-            print(f"Processing delayed blur for message ID: {msg_id}")
+            logger.info(f"Processing delayed blur for message ID: {msg_id}")
             await blur_photo(msg_id)
             collection.update_one({"message_id": msg_id}, {"$set": {"delay": False}})
         await asyncio.sleep(30)  # Check every 30 seconds
@@ -145,11 +149,12 @@ async def process_delay_tasks():
 # Start the bot and process delay tasks
 async def main():
     try:
-        print("Bot started.")
+        logger.info("Bot started.")
         asyncio.create_task(process_delay_tasks())
         await client.run_until_disconnected()  # Keep the bot running until disconnected
     except Exception as e:
-        print(f"Bot error: {e}")
+        logger.error(f"Bot error: {e}")
+        await client.disconnect()
 
 # Start the main function without asyncio.run
 client.loop.create_task(main())  # Running the main function in the event loop
