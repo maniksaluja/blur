@@ -19,7 +19,7 @@ api_hash = 'fb044056059384d3bea54ab7ce915226'
 bot_token = '7041654616:AAHqmt9LKjTL9lRAXj8HT_ZkjaWW9I-hz3Q'
 CHANNEL_ID = -1002374330304
 USER_ID = 817321875  # Replace with your user ID
-BLUR_PERCENTAGE = 80
+BLUR_PERCENTAGE = 10
 BLUR_DELAY = 60  # Delay in seconds
 
 client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
