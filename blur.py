@@ -18,7 +18,7 @@ collection.create_index([("timestamp", 1)], expireAfterSeconds=2592000)  # TTL o
 # Telegram Bot API setup
 api_id = '26980824'
 api_hash = 'fb044056059384d3bea54ab7ce915226'
-bot_token = '7041654616:AAHqmt9LKjTL9rAXj8HT_ZkjaWW9I-hz3Q'
+bot_token = '7041654616:AAHqmt9LKjTL9lRAXj8HT_ZkjaWW9I-hz3Q'
 CHANNEL_ID = -1002374330304
 USER_ID = 817321875  # Replace with your user ID
 BLUR_PERCENTAGE = 80  # Adjust blur intensity here (higher for stronger blur)
