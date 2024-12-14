@@ -1,61 +1,28 @@
-import time
-import requests
-import logging
+from pyrogram import Client, filters
+import asyncio
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Bot token aur channel ID
+bot_token = "7041654616:AAHqmt9LKjTL9lRAXj8HT_ZkjaWW9I-hz3Q"
+channel_id = -1002374330304  # Aapka channel ID
 
-TOKEN = '7041654616:AAHqmt9LKjTL9lRAXj8HT_ZkjaWW9I-hz3Q'
-CHAT_ID = '-1002374330304'
-LIKE_EMOJI = '👍'
-DISLIKE_EMOJI = '👎'
-API_URL = f"https://api.telegram.org/bot{TOKEN}"
+app = Client("my_bot", bot_token=bot_token)
 
-def send_reaction(chat_id, message_id, emoji):
-    url = f"{API_URL}/sendMessage"
-    payload = {
-        'chat_id': chat_id,
-        'text': emoji,
-        'reply_to_message_id': message_id
-    }
+# New Post Par Reactions Add Karna
+@app.on_message(filters.text & filters.chat(channel_id))
+async def add_reactions(client, message):
     try:
-        response = requests.post(url, data=payload)
-        response_data = response.json()
-        if response_data.get('ok'):
-            logging.info(f"Sent {emoji} to message ID {message_id} successfully.")
-        else:
-            logging.error(f"Failed to send {emoji} to message ID {message_id}. Error: {response_data.get('description')}")
-        return response_data
+        # Reaction ko add karna (Like aur Dislike)
+        await message.react("👍")  # Like reaction
+        await message.react("👎")  # Dislike reaction
     except Exception as e:
-        logging.error(f"Exception occurred while sending {emoji} to message ID {message_id}: {e}")
+        print(f"Error: {e}")
+        # FloodWait ko handle karne ke liye
+        await asyncio.sleep(10)  # Sleep for 10 seconds before retrying
+        await add_reactions(client, message)
 
-def get_updates(offset=None):
-    url = f"{API_URL}/getUpdates"
-    params = {'offset': offset, 'timeout': 100}
-    try:
-        response = requests.get(url, params=params)
-        response_data = response.json()
-        if response_data.get('ok'):
-            logging.info("Fetched updates successfully.")
-        else:
-            logging.error(f"Failed to fetch updates. Error: {response_data.get('description')}")
-        return response_data
-    except Exception as e:
-        logging.error(f"Exception occurred while fetching updates: {e}")
-        return {}
+@app.on_message(filters.text & filters.chat(channel_id))
+async def handle_new_post(client, message):
+    # Reactions ko automatically add karenge jab new post ho
+    await add_reactions(client, message)
 
-def monitor_channel():
-    last_update_id = None
-    while True:
-        updates = get_updates(last_update_id)
-        if updates.get("ok"):
-            for update in updates["result"]:
-                if "channel_post" in update:
-                    message = update["channel_post"]
-                    message_id = message["message_id"]
-                    send_reaction(CHAT_ID, message_id, LIKE_EMOJI)
-                    send_reaction(CHAT_ID, message_id, DISLIKE_EMOJI)
-                last_update_id = update["update_id"] + 1
-        time.sleep(1)  # Ensure we do not exceed rate limits
-
-monitor_channel()
+app.run()
