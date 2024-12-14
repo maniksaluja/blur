@@ -57,8 +57,19 @@ def monitor_channel():
                     message = update["channel_post"]
                     message_id = message["message_id"]
                     logging.info(f"New message found with ID {message_id}")
-                    send_reaction(CHAT_ID, message_id, LIKE_EMOJI)
-                    send_reaction(CHAT_ID, message_id, DISLIKE_EMOJI)
+
+                    # Ensuring the message actually exists before sending reaction
+                    try:
+                        response = requests.get(f"{API_URL}/getChatMessage", params={"chat_id": CHAT_ID, "message_id": message_id})
+                        if response.status_code == 200:
+                            logging.info(f"Message ID {message_id} exists. Sending reactions.")
+                            send_reaction(CHAT_ID, message_id, LIKE_EMOJI)
+                            send_reaction(CHAT_ID, message_id, DISLIKE_EMOJI)
+                        else:
+                            logging.error(f"Message ID {message_id} does not exist or could not be fetched. Response: {response.text}")
+                    except Exception as e:
+                        logging.error(f"Exception occurred while verifying message ID {message_id}: {e}")
+
                 last_update_id = update["update_id"] + 1
         time.sleep(1)  # Rate limit exceed na ho, isliye sleep kar rahe hain
 
