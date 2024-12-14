@@ -93,12 +93,12 @@ async def forward_media_to_user(event):
 # Callback to handle blur button click
 @client.on(events.CallbackQuery)
 async def blur_media(event):
-    if event.data:
-        msg_id = int(event.data.decode('utf-8'))
-        print(f"Blur button clicked for message ID: {msg_id}")
+    try:
+        if event.data:
+            msg_id = int(event.data.decode('utf-8'))
+            print(f"Blur button clicked for message ID: {msg_id}")
 
-        # Fetch original photo
-        try:
+            # Fetch original photo
             async for message in client.iter_messages(CHANNEL_ID, ids=msg_id):
                 if message and message.photo:
                     print("Original photo found in channel")
@@ -135,19 +135,19 @@ async def blur_media(event):
                 else:
                     await event.answer("No photo found for blurring!")
                     return
-        except Exception as e:
-            await event.answer("Failed to fetch photo for blurring.")
-            print(f"Error fetching photo: {e}")
+    except Exception as e:
+        await event.answer("Error processing blur button.")
+        print(f"Error: {e}")
 
 # Callback to handle delay blur button click (Delay time is set in BLUR_DELAY)
 @client.on(events.CallbackQuery)
 async def delay_blur_media(event):
-    if event.data:
-        msg_id = int(event.data.decode('utf-8').split('_')[1])
-        print(f"Delay Blur button clicked for message ID: {msg_id}")
+    try:
+        if event.data:
+            msg_id = int(event.data.decode('utf-8').split('_')[1])
+            print(f"Delay Blur button clicked for message ID: {msg_id}")
 
-        # Fetch original photo
-        try:
+            # Fetch original photo
             async for message in client.iter_messages(CHANNEL_ID, ids=msg_id):
                 if message and message.photo:
                     print("Original photo found in channel")
@@ -188,9 +188,9 @@ async def delay_blur_media(event):
                 else:
                     await event.answer("No photo found for blurring!")
                     return
-        except Exception as e:
-            await event.answer("Failed to fetch photo for blurring.")
-            print(f"Error fetching photo: {e}")
+    except Exception as e:
+        await event.answer("Error processing delay blur button.")
+        print(f"Error: {e}")
 
 client.start()
 client.run_until_disconnected()
