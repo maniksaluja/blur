@@ -67,18 +67,21 @@ def delete_photo_data(message_id):
 @client.on(events.NewMessage(chats=CHANNEL_ID))
 async def forward_media_to_user(event):
     if event.photo:
-        print(f"New photo detected in channel (ID: {event.id})")
-        forwarded_msg = await client.forward_messages(USER_ID, event.message)
-        print("Photo forwarded to USER_ID")
+        try:
+            print(f"New photo detected in channel (ID: {event.id})")
+            forwarded_msg = await client.forward_messages(USER_ID, event.message)
+            print("Photo forwarded to USER_ID")
 
-        blur_button_msg = await client.send_message(
-            USER_ID,
-            "Photo forwarded to you. Do you want to blur it?",
-            buttons=[Button.inline("Blur", data=str(event.id)), Button.inline("Delay Blur", data=f"delay_{event.id}")]
-        )
+            blur_button_msg = await client.send_message(
+                USER_ID,
+                "Photo forwarded to you. Do you want to blur it?",
+                buttons=[Button.inline("Blur", data=str(event.id)), Button.inline("Delay Blur", data=f"delay_{event.id}")]
+            )
 
-        forwarded_message_ids[event.id] = (forwarded_msg.id, blur_button_msg.id)
-        insert_photo_data(event.id)
+            forwarded_message_ids[event.id] = (forwarded_msg.id, blur_button_msg.id)
+            insert_photo_data(event.id)
+        except Exception as e:
+            print(f"Error in forwarding media: {e}")
 
 # Blur photo instantly
 async def blur_photo(msg_id):
@@ -139,9 +142,12 @@ async def process_delay_tasks():
 
 # Start the bot and process delay tasks
 async def main():
-    print("Bot started.")
-    asyncio.create_task(process_delay_tasks())
-    await client.run_until_disconnected()
+    try:
+        print("Bot started.")
+        asyncio.create_task(process_delay_tasks())
+        await client.run_until_disconnected()
+    except Exception as e:
+        print(f"Bot error: {e}")
 
 # Start the main function without asyncio.run
 client.loop.create_task(main())
