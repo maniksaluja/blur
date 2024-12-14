@@ -139,9 +139,10 @@ async def process_delay_tasks():
 
 # Start the bot and process delay tasks
 async def main():
-    await client.start()
     print("Bot started.")
     asyncio.create_task(process_delay_tasks())
     await client.run_until_disconnected()
 
-asyncio.run(main())
+# Start the main function without asyncio.run
+client.loop.create_task(main())
+client.start()
