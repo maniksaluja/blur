@@ -148,4 +148,15 @@ async def main():
     await client.run_until_disconnected()
 
 # Use await directly instead of asyncio.run()
-await main()
+# Start the bot and process delay tasks
+async def main():
+    await client.start()
+    print("Bot started.")
+    asyncio.create_task(process_delay_tasks())
+    await client.run_until_disconnected()
+
+# Ye line ko replace karen:
+# await main()
+
+if __name__ == "__main__":
+    asyncio.run(main())  # This is correct way to run async main
