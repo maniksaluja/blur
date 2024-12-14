@@ -1,11 +1,13 @@
 from pyrogram import Client, filters
 import asyncio
 
-# Bot token aur channel ID
+# Telegram API details
+api_id = '26980824'  # Replace with your API ID
+api_hash = 'fb044056059384d3bea54ab7ce915226'  # Replace with your API Hash
 bot_token = "7041654616:AAHqmt9LKjTL9lRAXj8HT_ZkjaWW9I-hz3Q"
-channel_id = -1002374330304  # Aapka channel ID
+channel_id = -1002374330304  # Your channel ID
 
-app = Client("my_bot", bot_token=bot_token)
+app = Client("my_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
 
 # New Post Par Reactions Add Karna
 @app.on_message(filters.text & filters.chat(channel_id))
