@@ -82,6 +82,7 @@ async def forward_media_to_user(event):
 
     forwarded_message_ids[event.id] = (forwarded_msg.id, blur_button_msg.id)
     insert_photo_data(event.id)
+    await asyncio.sleep(1)  # Delay between sending each message to avoid flooding
 
 # Blur photo instantly
 async def blur_photo(msg_id):
@@ -103,6 +104,7 @@ async def blur_photo(msg_id):
                     del forwarded_message_ids[msg_id]
 
                 delete_photo_data(msg_id)
+                await asyncio.sleep(1)  # Delay between each replacement to avoid overload
             else:
                 print(f"No photo found for message ID: {msg_id}")
     except Exception as e:
@@ -128,11 +130,11 @@ async def handle_callback(event):
         print(f"Error handling callback: {e}")
         await event.answer("Error processing your request.")
 
-# Process delayed blur tasks
+# Process delayed blur tasks in batches
 async def process_delay_tasks():
     while True:
         current_time = int(time.time())
-        tasks = collection.find({"delay": True, "delay_time": {"$lte": current_time}})
+        tasks = list(collection.find({"delay": True, "delay_time": {"$lte": current_time}}).limit(10))  # Process 10 at a time
         for task in tasks:
             msg_id = task["message_id"]
             print(f"Processing delayed blur for message ID: {msg_id}")
