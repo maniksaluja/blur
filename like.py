@@ -15,9 +15,16 @@ async def add_reactions(client, message):
     print("New message received")  # Log when a new message is received
     try:
         print("Adding reactions...")  # Log before adding reactions
-        await message.react("👍")  # Like reaction
-        await message.react("👎")  # Dislike reaction
-        print("Reactions added successfully!")  # Log success
+        
+        # Ensure the message is from the right channel and not already reacted
+        if not message.from_user.is_bot:
+            # Send reaction (Like or Dislike)
+            await message.react("👍")  # Like reaction
+            await message.react("👎")  # Dislike reaction
+            print("Reactions added successfully!")  # Log success
+        else:
+            print("Ignoring bot message...")  # Ignore bot messages
+
     except Exception as e:
         print(f"Error: {e}")  # Log error if it occurs
         # FloodWait ko handle karne ke liye
