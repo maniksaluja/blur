@@ -3,7 +3,7 @@ from telethon.tl.types import InputPeerChannel
 
 api_id = '26980824'  # Replace with your API ID
 api_hash = 'fb044056059384d3bea54ab7ce915226'  # Replace with your API Hash
-bot_token = "7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI"
+bot_token = "7041654616:AAHqmt9LKjTL9lRAXj8HT_ZkjaWW9I-hz3Q"
 channel_id = -1002374330304  # Your channel ID
 
 client = TelegramClient('my_bot', api_id, api_hash).start(bot_token=bot_token)
@@ -15,14 +15,10 @@ async def handler(event):
     print(f"New message ID: {message.id} received")
     
     try:
-        # Check if the message is a valid post and not from a bot
-        if not message.sender_id:  # Message from a user, not a bot
-            # Add reactions (like/dislike)
-            await message.add_reaction("👍")  # Like reaction
-            await message.add_reaction("👎")  # Dislike reaction
-            print(f"Reactions added to message ID: {message.id}")
-        else:
-            print(f"Ignoring bot message with ID: {message.id}")
+        # Add reactions (like/dislike) to every new post
+        await message.add_reaction("👍")  # Like reaction
+        await message.add_reaction("👎")  # Dislike reaction
+        print(f"Reactions added to message ID: {message.id}")
     
     except Exception as e:
         print(f"Error: {e}")
