@@ -5,6 +5,7 @@ from telethon import TelegramClient, events, Button
 from io import BytesIO
 from PIL import Image, ImageFilter
 import asyncio
+from sqlite3 import connect, OperationalError
 
 # MongoDB Setup
 MONGO_URL = "mongodb+srv://manik:manik11@cluster0.iam3w.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
@@ -25,6 +26,11 @@ BLUR_DELAY = 60  # Delay in seconds
 client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
 
 forwarded_message_ids = {}
+
+def get_db_connection():
+    conn = connect('your_database_name.db')
+    conn.execute('PRAGMA journal_mode=WAL')  # Enable WAL mode
+    return conn
 
 # Helper to blur images
 def blur_image(image_data):
@@ -52,15 +58,29 @@ def insert_photo_data(message_id, delay=False, delay_time=None):
 
 # Update status to blurred
 def update_blurred_status(message_id):
-    collection.update_one(
-        {"message_id": message_id},
-        {"$set": {"status": "blurred", "blurred_timestamp": int(time.time())}}
-    )
+    conn = get_db_connection()
+    c = conn.cursor()
+    try:
+        c.execute_with_retry("UPDATE photos_collection SET status = 'blurred', blurred_timestamp = ? WHERE message_id = ?",
+                             (int(time.time()), message_id))
+        conn.commit()
+    except OperationalError as e:
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
     print(f"Photo with message ID {message_id} marked as blurred")
 
 # Delete photo data
 def delete_photo_data(message_id):
-    collection.delete_one({"message_id": message_id})
+    conn = get_db_connection()
+    c = conn.cursor()
+    try:
+        c.execute_with_retry("DELETE FROM photos_collection WHERE message_id = ?", (message_id,))
+        conn.commit()
+    except OperationalError as e:
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
     print(f"Photo with message ID {message_id} data deleted from database")
 
 # Forward photo to USER_ID with buttons
