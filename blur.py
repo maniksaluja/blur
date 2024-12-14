@@ -93,12 +93,12 @@ async def forward_media_to_user(event):
 # Callback to handle blur button click
 @client.on(events.CallbackQuery)
 async def blur_media(event):
-    try:
-        if event.data:
-            msg_id = int(event.data.decode('utf-8'))
-            print(f"Blur button clicked for message ID: {msg_id}")
+    if event.data:
+        msg_id = int(event.data.decode('utf-8'))
+        print(f"Blur button clicked for message ID: {msg_id}")
 
-            # Fetch original photo
+        # Fetch original photo
+        try:
             async for message in client.iter_messages(CHANNEL_ID, ids=msg_id):
                 if message and message.photo:
                     print("Original photo found in channel")
@@ -135,62 +135,65 @@ async def blur_media(event):
                 else:
                     await event.answer("No photo found for blurring!")
                     return
-    except Exception as e:
-        await event.answer("Error processing blur button.")
-        print(f"Error: {e}")
+        except Exception as e:
+            await event.answer("Failed to fetch photo for blurring.")
+            print(f"Error fetching photo: {e}")
 
 # Callback to handle delay blur button click (Delay time is set in BLUR_DELAY)
 @client.on(events.CallbackQuery)
 async def delay_blur_media(event):
-    try:
-        if event.data:
-            msg_id = int(event.data.decode('utf-8').split('_')[1])
+    if event.data:
+        # Checking for 'delay_' prefix before extracting the message ID
+        data = event.data.decode('utf-8')
+        if data.startswith('delay_'):
+            msg_id = int(data.split('_')[1])  # Extracting the message ID correctly
             print(f"Delay Blur button clicked for message ID: {msg_id}")
 
             # Fetch original photo
-            async for message in client.iter_messages(CHANNEL_ID, ids=msg_id):
-                if message and message.photo:
-                    print("Original photo found in channel")
-                    photo = await message.download_media(file=BytesIO())
-                    await event.answer(f"Photo will be blurred after {BLUR_DELAY} seconds!")
+            try:
+                async for message in client.iter_messages(CHANNEL_ID, ids=msg_id):
+                    if message and message.photo:
+                        print("Original photo found in channel")
+                        photo = await message.download_media(file=BytesIO())
+                        await event.answer(f"Photo will be blurred after {BLUR_DELAY} seconds!")
 
-                    # Wait for delay time before blurring
-                    await asyncio.sleep(BLUR_DELAY)  # Time delay before applying blur
+                        # Wait for delay time before blurring
+                        await asyncio.sleep(BLUR_DELAY)  # Time delay before applying blur
 
-                    # Apply blur after delay
-                    temp_file = blur_image(photo)
-                    # Replace the original photo in the channel
-                    try:
-                        with open(temp_file, 'rb') as f:
-                            await client.edit_message(CHANNEL_ID, msg_id, file=f)
-                        print("Photo replaced in channel")
+                        # Apply blur after delay
+                        temp_file = blur_image(photo)
+                        # Replace the original photo in the channel
+                        try:
+                            with open(temp_file, 'rb') as f:
+                                await client.edit_message(CHANNEL_ID, msg_id, file=f)
+                            print("Photo replaced in channel")
 
-                        # Update MongoDB status to blurred
-                        update_blurred_status(msg_id)
+                            # Update MongoDB status to blurred
+                            update_blurred_status(msg_id)
 
-                        # Delete forwarded and blur button messages from user's DM
-                        if msg_id in forwarded_message_ids:
-                            forwarded_id, button_id = forwarded_message_ids[msg_id]
-                            try:
-                                await client.delete_messages(USER_ID, [forwarded_id, button_id])
-                                print("Blur button and forwarded message deleted from user DM")
-                            except Exception as e:
-                                print(f"Error deleting messages from user DM: {e}")
-                            finally:
-                                del forwarded_message_ids[msg_id]
+                            # Delete forwarded and blur button messages from user's DM
+                            if msg_id in forwarded_message_ids:
+                                forwarded_id, button_id = forwarded_message_ids[msg_id]
+                                try:
+                                    await client.delete_messages(USER_ID, [forwarded_id, button_id])
+                                    print("Blur button and forwarded message deleted from user DM")
+                                except Exception as e:
+                                    print(f"Error deleting messages from user DM: {e}")
+                                finally:
+                                    del forwarded_message_ids[msg_id]
 
-                    except Exception as e:
-                        await event.answer("Failed to replace photo in channel.")
-                        print(f"Error replacing photo in channel: {e}")
+                        except Exception as e:
+                            await event.answer("Failed to replace photo in channel.")
+                            print(f"Error replacing photo in channel: {e}")
 
-                    # Delete the photo data after blur operation
-                    delete_photo_data(msg_id)
-                else:
-                    await event.answer("No photo found for blurring!")
-                    return
-    except Exception as e:
-        await event.answer("Error processing delay blur button.")
-        print(f"Error: {e}")
+                        # Delete the photo data after blur operation
+                        delete_photo_data(msg_id)
+                    else:
+                        await event.answer("No photo found for blurring!")
+                        return
+            except Exception as e:
+                await event.answer("Failed to fetch photo for blurring.")
+                print(f"Error fetching photo: {e}")
 
 client.start()
 client.run_until_disconnected()
