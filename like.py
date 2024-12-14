@@ -12,19 +12,24 @@ app = Client("my_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
 # New Post Par Reactions Add Karna
 @app.on_message(filters.text & filters.chat(channel_id))
 async def add_reactions(client, message):
+    print("New message received")  # Log when a new message is received
     try:
-        # Reaction ko add karna (Like aur Dislike)
+        print("Adding reactions...")  # Log before adding reactions
         await message.react("👍")  # Like reaction
         await message.react("👎")  # Dislike reaction
+        print("Reactions added successfully!")  # Log success
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error: {e}")  # Log error if it occurs
         # FloodWait ko handle karne ke liye
         await asyncio.sleep(10)  # Sleep for 10 seconds before retrying
+        print("Retrying after 10 seconds...")  # Log retry
         await add_reactions(client, message)
 
 @app.on_message(filters.text & filters.chat(channel_id))
 async def handle_new_post(client, message):
+    print("Handling new post...")  # Log when handling new post
     # Reactions ko automatically add karenge jab new post ho
     await add_reactions(client, message)
 
+print("Bot is starting...")  # Log when bot starts
 app.run()
