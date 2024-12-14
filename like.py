@@ -2,7 +2,6 @@ import time
 import requests
 import logging
 
-# Logging setup kar rahe hain
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 TOKEN = '7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI'
@@ -36,7 +35,7 @@ def get_updates(offset=None):
     try:
         response = requests.get(url, params=params)
         response_data = response.json()
-        if response_data.get('ok'):
+        if response_data get('ok'):
             logging.info("Fetched updates successfully.")
         else:
             logging.error(f"Failed to fetch updates. Error: {response_data.get('description')}")
@@ -58,6 +57,6 @@ def monitor_channel():
                     logging.info(f"New message found with ID {message_id}")
                     send_reaction(CHAT_ID, message_id, LIKE_EMOJI)
                     last_update_id = update["update_id"] + 1
-        time.sleep(1)  # Ensure we do not exceed rate limits
+        time.sleep(1)
 
 monitor_channel()
