@@ -2,7 +2,7 @@ import time
 from pyrogram import Client, filters
 from pyrogram.errors import FloodWait
 from pymongo import MongoClient, ASCENDING
-import sqlite3  # Make sure sqlite3 is imported
+import sqlite3  # Import SQLite3 module
 
 # Bot Token aur Channel ID
 bot_token = "7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI"  # Yahan apna bot token daalna hai
