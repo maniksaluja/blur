@@ -9,7 +9,7 @@ app = Client("edit_bot", api_id, api_hash, bot_token=bot_token)
 
 # Track Edit Mode and User Data
 edit_mode = {"status": False}  # False = ❌, True = ✅
-user_data = {"old_text": "", "new_text": "", "channel_id": ""}
+user_data = {"old_text": "", "new_text": "", "channel_id": "", "start_link": "", "end_link": ""}
 
 @app.on_message(filters.command("edit") & filters.private)
 async def toggle_edit_mode(client, message):
@@ -32,14 +32,11 @@ async def callback_handler(client, callback_query):
         status = "ON" if edit_mode["status"] else "OFF"
 
         buttons = [
-            [InlineKeyboardButton("Edit ✅❌", callback_data="edit_toggle")]
+            [InlineKeyboardButton("OLD TEXT", callback_data="old_text"),
+             InlineKeyboardButton("NEW TEXT", callback_data="new_text")],
+            [InlineKeyboardButton("Start Processing", callback_data="start_processing"),
+             InlineKeyboardButton("Back", callback_data="back")]
         ]
-        if edit_mode["status"]:
-            buttons.extend([
-                [InlineKeyboardButton("OLD TEXT", callback_data="old_text"),
-                InlineKeyboardButton("NEW TEXT", callback_data="new_text")],
-                [InlineKeyboardButton("Start Processing", callback_data="start_processing")]
-            ])
         await callback_query.message.edit_text(
             f"Edit Mode: {status}.",
             reply_markup=InlineKeyboardMarkup(buttons)
@@ -54,12 +51,18 @@ async def callback_handler(client, callback_query):
         await callback_query.message.reply_text("Please send the NEW text to replace with.")
         
     elif callback_query.data == "start_processing":
-        # Ask for channel ID and forward messages to start processing
+        # Ask for channel ID to start processing
         await callback_query.message.reply_text("Please provide the Channel ID to start processing.")
         
-    elif callback_query.data == "cancel_processing":
-        # Cancel the processing
-        await callback_text("Processing has been cancelled.")
+    elif callback_query.data == "back":
+        # Go back to initial menu
+        buttons = [
+            [InlineKeyboardButton("Edit ✅❌", callback_data="edit_toggle")]
+        ]
+        await callback_query.message.edit_text(
+            "Edit mode settings.",
+            reply_markup=InlineKeyboardMarkup(buttons)
+        )
 
 @app.on_message(filters.text & filters.private)
 async def handle_input(client, message):
@@ -76,17 +79,25 @@ async def handle_input(client, message):
 
     elif message.text.isdigit():  # Assuming Channel ID is numeric
         user_data["channel_id"] = message.text
-        await message.reply_text(f"Channel ID {user_data['channel_id']} has been saved. Press 'Start Processing' to continue.")
+        await message.reply_text(f"Channel ID {user_data['channel_id']} has been saved. Please provide the start link.")
+
+    elif "http" in message.text.lower() and user_data["start_link"] == "":
+        user_data["start_link"] = message.text
+        await message.reply_text("Start link has been saved. Please provide the end link.")
+    
+    elif "http" in message.text.lower() and user_data["end_link"] == "":
+        user_data["end_link"] = message.text
+        await message.reply_text("End link has been saved. Press 'Start Processing' to continue.")
     
     elif message.text.lower() == "start processing":
         # Here, implement the actual process of text replacement in the channel based on user inputs
-        if user_data["old_text"] and user_data["new_text"] and user_data["channel_id"]:
+        if user_data["old_text"] and user_data["new_text"] and user_data["channel_id"] and user_data["start_link"] and user_data["end_link"]:
             # Start text replacement in the channel (placeholder code)
             await message.reply_text(
-                f"Processing started on Channel ID {user_data['channel_id']}.\nOld Text: {user_data['old_text']}\nNew Text: {user_data['new_text']}"
+                f"Processing started on Channel ID {user_data['channel_id']}.\nOld Text: {user_data['old_text']}\nNew Text: {user_data['new_text']}\nStart Link: {user_data['start_link']}\nEnd Link: {user_data['end_link']}"
             )
         else:
-            await message.reply_text("Please make sure all steps are completed (old text, new text, and channel ID).")
+            await message.reply_text("Please make sure all steps are completed (old text, new text, channel ID, start link, and end link).")
 
 print("Bot is running...")
 app.run()
