@@ -2,6 +2,7 @@ import time
 from pyrogram import Client, filters
 from pyrogram.errors import FloodWait
 from pymongo import MongoClient, ASCENDING
+import sqlite3  # Make sure sqlite3 is imported
 
 # Bot Token aur Channel ID
 bot_token = "7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI"  # Yahan apna bot token daalna hai
@@ -17,6 +18,26 @@ collection.create_index([('time', ASCENDING)], expireAfterSeconds=604800)  # 7 d
 
 # Telegram client
 app = Client("my_bot", bot_token=bot_token)
+
+# SQLite connection
+conn = sqlite3.connect('your_database.db')  # Replace with your database file name
+cursor = conn.cursor()
+
+# Ensure the table schema is correct
+def ensure_schema():
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS your_table (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        old_text TEXT,
+        new_text TEXT,
+        time REAL,
+        number INTEGER -- Add this if needed by your logic
+    )
+    """)
+    conn.commit()
+
+# Ensure schema is correct before running the app
+ensure_schema()
 
 # Variables for old and new text
 old_text = "hello"
@@ -36,6 +57,13 @@ async def replace_text_in_channel(message):
                 "new_text": new_message,   # Save the new message text
                 "time": time.time()        # Timestamp for when the change occurred
             })
+
+            # Log the change in SQLite (store old message text)
+            cursor.execute("""
+            INSERT INTO your_table (old_text, new_text, time) VALUES (?, ?, ?)
+            """, (message.text, new_message, time.time()))
+            conn.commit()
+
             print("Message updated and logged successfully")
 
     except FloodWait as e:
