@@ -1,103 +1,50 @@
+import time
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.errors import FloodWait
+from pymongo import MongoClient, ASCENDING
 
-# Bot Configuration
-api_id = "26980824"
-api_hash = "fb044056059384d3bea54ab7ce915226"
-bot_token = "7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI"
-app = Client("edit_bot", api_id, api_hash, bot_token=bot_token)
+# Bot Token aur Channel ID
+bot_token = "7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI"  # Yahan apna bot token daalna hai
+channel_id = "-1002374330304"  # Yahan apna channel ID daalna hoga
 
-# Track Edit Mode and User Data
-edit_mode = {"status": False}  # False = ❌, True = ✅
-user_data = {"old_text": "", "new_text": "", "channel_id": "", "start_link": "", "end_link": ""}
+# MongoDB setup (with TTL index)
+mongo_client = MongoClient("mongodb+srv://manik:manik11@cluster0.iam3w.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+db = mongo_client['your_db']
+collection = db['message_logs']
 
-@app.on_message(filters.command("edit") & filters.private)
-async def toggle_edit_mode(client, message):
-    # Buttons for editing
-    buttons = [
-        [InlineKeyboardButton("Edit ✅❌", callback_data="edit_toggle")]
-    ]
-    await message.reply_text(
-        "Click 'Edit ✅❌' to enable or disable the edit mode.",
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
+# Create TTL index on 'time' field, documents will expire after 7 days (604800 seconds)
+collection.create_index([('time', ASCENDING)], expireAfterSeconds=604800)  # 7 days = 604800 seconds
 
-@app.on_callback_query()
-async def callback_handler(client, callback_query):
-    global edit_mode, user_data
+# Telegram client
+app = Client("my_bot", bot_token=bot_token)
 
-    if callback_query.data == "edit_toggle":
-        # Toggle edit mode status
-        edit_mode["status"] = not edit_mode["status"]
-        status = "ON" if edit_mode["status"] else "OFF"
+# Variables for old and new text
+old_text = "hello"
+new_text = "by"
 
-        buttons = [
-            [InlineKeyboardButton("OLD TEXT", callback_data="old_text"),
-             InlineKeyboardButton("NEW TEXT", callback_data="new_text")],
-            [InlineKeyboardButton("Start Processing", callback_data="start_processing"),
-             InlineKeyboardButton("Back", callback_data="back")]
-        ]
-        await callback_query.message.edit_text(
-            f"Edit Mode: {status}.",
-            reply_markup=InlineKeyboardMarkup(buttons)
-        )
+# Function to replace text
+async def replace_text_in_channel(message):
+    try:
+        if old_text in message.text:
+            # Replace old text with new text
+            new_message = message.text.replace(old_text, new_text)
+            await message.edit(new_message)  # Edit the message with new text
 
-    elif callback_query.data == "old_text":
-        # Ask user for old text to replace
-        await callback_query.message.reply_text("Please send the OLD text you want to replace.")
-        
-    elif callback_query.data == "new_text":
-        # Ask user for new text
-        await callback_query.message.reply_text("Please send the NEW text to replace with.")
-        
-    elif callback_query.data == "start_processing":
-        # Ask for channel ID to start processing
-        await callback_query.message.reply_text("Please provide the Channel ID to start processing.")
-        
-    elif callback_query.data == "back":
-        # Go back to initial menu
-        buttons = [
-            [InlineKeyboardButton("Edit ✅❌", callback_data="edit_toggle")]
-        ]
-        await callback_query.message.edit_text(
-            "Edit mode settings.",
-            reply_markup=InlineKeyboardMarkup(buttons)
-        )
+            # Log the change in MongoDB (store old message text)
+            collection.insert_one({
+                "old_text": message.text,  # Save the old message text
+                "new_text": new_message,   # Save the new message text
+                "time": time.time()        # Timestamp for when the change occurred
+            })
+            print("Message updated and logged successfully")
 
-@app.on_message(filters.text & filters.private)
-async def handle_input(client, message):
-    global user_data
+    except FloodWait as e:
+        print(f"Flood wait: Sleeping for {e.x} seconds")
+        time.sleep(e.x)  # Handle FloodWait
+        await replace_text_in_channel(message)  # Retry after waiting
 
-    # Store the old text, new text, and channel ID from user
-    if user_data["old_text"] == "" and "old text" not in message.text.lower():
-        user_data["old_text"] = message.text
-        await message.reply_text("OLD Text has been saved. Now please send the NEW Text.")
+@app.on_message(filters.chat(channel_id) & filters.text)
+async def on_message(client, message):
+    await replace_text_in_channel(message)
 
-    elif user_data["new_text"] == "" and "new text" not in message.text.lower():
-        user_data["new_text"] = message.text
-        await message.reply_text("NEW Text has been saved. Now please send the Channel ID or press 'Start Processing'.")
-
-    elif message.text.isdigit():  # Assuming Channel ID is numeric
-        user_data["channel_id"] = message.text
-        await message.reply_text(f"Channel ID {user_data['channel_id']} has been saved. Please provide the start link.")
-
-    elif "http" in message.text.lower() and user_data["start_link"] == "":
-        user_data["start_link"] = message.text
-        await message.reply_text("Start link has been saved. Please provide the end link.")
-    
-    elif "http" in message.text.lower() and user_data["end_link"] == "":
-        user_data["end_link"] = message.text
-        await message.reply_text("End link has been saved. Press 'Start Processing' to continue.")
-    
-    elif message.text.lower() == "start processing":
-        # Here, implement the actual process of text replacement in the channel based on user inputs
-        if user_data["old_text"] and user_data["new_text"] and user_data["channel_id"] and user_data["start_link"] and user_data["end_link"]:
-            # Start text replacement in the channel (placeholder code)
-            await message.reply_text(
-                f"Processing started on Channel ID {user_data['channel_id']}.\nOld Text: {user_data['old_text']}\nNew Text: {user_data['new_text']}\nStart Link: {user_data['start_link']}\nEnd Link: {user_data['end_link']}"
-            )
-        else:
-            await message.reply_text("Please make sure all steps are completed (old text, new text, channel ID, start link, and end link).")
-
-print("Bot is running...")
 app.run()
