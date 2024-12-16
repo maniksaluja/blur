@@ -2,6 +2,7 @@ from pyrogram import Client, filters
 import requests
 import os
 from PIL import Image
+import mimetypes
 
 api_id = '26980824'  # Replace with your API ID
 api_hash = 'fb044056059384d3bea54ab7ce915226'  # Replace with your API Hash
@@ -46,9 +47,14 @@ async def handle_photo(client, message):
             downloaded_file = compressed_file
             print(f"Compressed file path: {downloaded_file}")
 
+        # Determine the MIME type based on the file extension
+        mime_type, _ = mimetypes.guess_type(downloaded_file)
+        if not mime_type:
+            mime_type = 'image/jpeg'  # Default to JPEG if MIME type detection fails
+
         # Upload image to Telegraph using HTTP POST request
         with open(downloaded_file, 'rb') as file:
-            response = requests.post('https://telegra.ph/upload', files={'file': ('file.jpg', file, 'image/jpeg')})
+            response = requests.post('https://telegra.ph/upload', files={'file': ('file', file, mime_type)})
         
         print(f"Response Status Code: {response.status_code}")
         print(f"Response Headers: {response.headers}")
