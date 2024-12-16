@@ -18,17 +18,18 @@ def upload_to_telegraph(photo_url):
     return None
 
 # Pyrogram Client setup
-app = Client("my_bot", bot_token=BOT_TOKEN)
+app = Client("my_bot", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
 
 # Handler to process the photo message
 @app.on_message(filters.photo & filters.chat(CHANNEL_ID))
 async def handle_photo(client, message):
     # Get the file ID of the photo
-    file = await message.download()  # Download the file
+    file = await message.download()  # Download the file locally
     file_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file}"
     
     # Generate the Telegraph link for the photo
-    telegraph_link = upload_to_telegraph(file_url)
+    telegraph_link = await app.loop.run_in_executor(None, upload_to_telegraph, file_url)
+    
     if telegraph_link:
         # Update the caption of the photo with the Telegraph link
         await message.edit_caption(f"Here's the image: {telegraph_link}")
