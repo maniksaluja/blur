@@ -30,9 +30,9 @@ async def handle_photo(client, message):
             image_url = f"https://telegra.ph{response[0]['src']}"
             print(f"Image uploaded successfully! URL: {image_url}")
             
-            # Edit the post with the uploaded image URL
+            # Send a new message with the uploaded image URL
             caption = f"Check out this photo: {image_url}"
-            await client.edit_message_caption(chat_id=message.chat.id, message_id=message.message_id, caption=caption)
+            await client.send_message(chat_id=message.chat.id, text=caption)
         else:
             print("Failed to upload image to Telegraph or response format is not valid")
     except Exception as e:
