@@ -24,7 +24,9 @@ async def handle_photo(client, message):
     try:
         # Upload image to Telegraph
         response = telegraph.upload_file(downloaded_file)
-        if response:
+        
+        if isinstance(response, list) and len(response) > 0:
+            # Extract image URL
             image_url = f"https://telegra.ph{response[0]['src']}"
             print(f"Image uploaded successfully! URL: {image_url}")
             
@@ -32,7 +34,7 @@ async def handle_photo(client, message):
             caption = f"Check out this photo: {image_url}"
             await message.edit(caption=caption)
         else:
-            print("Failed to upload image to Telegraph")
+            print("Failed to upload image to Telegraph or response format is not valid")
     except Exception as e:
         print(f"Error: {str(e)}")
 
