@@ -16,6 +16,7 @@ CHANNEL_ID = '-1002374330304'  # Channel username or channel ID
 # Function to upload the photo to Telegraph and get the link
 def upload_to_telegraph(photo_url):
     try:
+        logger.info(f"Uploading photo to Telegraph from URL: {photo_url}")
         url = 'https://telegra.ph/upload'
         files = {'file': requests.get(photo_url).content}
         response = requests.post(url, files=files)
@@ -35,16 +36,23 @@ app = Client("my_bot", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
 # Function to handle photo messages sequentially
 async def process_photos_sequentially(client, messages):
     for message in messages:
-        logger.info(f"Processing photo from message {message.message_id}")
+        logger.info(f"Processing photo with message ID {message.message_id}")
+        
         try:
             # Download the file locally
             file = await message.download()
             file_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file}"
             
+            # Log the photo URL being uploaded
+            logger.info(f"File URL: {file_url}")
+            
             # Generate the Telegraph link for the photo
             telegraph_link = await app.loop.run_in_executor(None, upload_to_telegraph, file_url)
             
             if telegraph_link:
+                # Log link creation
+                logger.info(f"Telegraph link created: {telegraph_link}")
+                
                 # Update the caption of the photo with the Telegraph link
                 await message.edit_caption(f"Here's the image: {telegraph_link}")
                 logger.info(f"Updated caption for message {message.message_id} with link: {telegraph_link}")
