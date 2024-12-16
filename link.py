@@ -1,13 +1,15 @@
 import requests
 
-# Telegram API URL for testing
-api_url = "https://api.telegram.org/7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI/getMe"
+# Your bot token
+bot_token = "7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI"
+url = f"https://api.telegram.org/bot{bot_token}/getMe"
 
-# Make a request to the bot API to check if the bot is working
-response = requests.get(api_url)
+response = requests.get(url)
 
-# Check if the response is successful
+# Check if API is working
 if response.status_code == 200:
-    print("API is working. Response:", response.json())
+    print("API is working.")
+    print("Response:", response.json())
 else:
-    print("API not working. Status Code:", response.status_code, "Response:", response.text)
+    print(f"API not working. Status Code: {response.status_code}")
+    print("Response:", response.json())
