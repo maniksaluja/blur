@@ -23,7 +23,7 @@ async def handle_photo(client, message):
     
     try:
         # Upload image to Telegraph
-        response = telegraph.upload_file(downloaded_file)
+        response = telegraph.upload_file([downloaded_file])
         
         if isinstance(response, list) and len(response) > 0:
             # Extract image URL
