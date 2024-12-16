@@ -4,7 +4,6 @@ import os
 def upload_image_to_telegraph(image_path):
     url = "https://telegra.ph/upload"
     
-    # Check file type and size
     try:
         # Check if file exists
         if not os.path.exists(image_path):
@@ -26,9 +25,13 @@ def upload_image_to_telegraph(image_path):
             print(f"Invalid file type. Allowed types are: {allowed_extensions}")
             return None
         
-        # Open image and send POST request
+        # Open image and send POST request with custom headers for better handling
         with open(image_path, 'rb') as file:
-            response = requests.post(url, files={'file': ('file.jpg', file, f'image/{file_extension}')})
+            files = {'file': ('file.jpg', file, f'image/{file_extension}')}
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            }
+            response = requests.post(url, files=files, headers=headers)
         
         print(f"Response Code: {response.status_code}")
         print(f"Response Text: {response.text}")
