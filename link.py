@@ -1,12 +1,12 @@
 import requests
 
 def upload_text_to_telegraph(title, content):
-    url = "https://telegra.ph/createPage"
+    url = "https://api.telegra.ph/createPage"
     
     # Preparing the data payload for the text
     data = {
         'title': title,
-        'content': content,
+        'content': f'[{{"tag":"p","children":["{content}"]}}]',
         'author_name': 'Your Bot Name',  # Optional
         'author_url': 'https://yourwebsite.com',  # Optional
     }
@@ -35,5 +35,5 @@ def upload_text_to_telegraph(title, content):
 
 # Example usage
 title = "Sample Title"
-content = "<p>This is a test text for uploading on Telegraph.</p>"
+content = "This is a test text for uploading on Telegraph."
 upload_text_to_telegraph(title, content)
