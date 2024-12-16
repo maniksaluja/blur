@@ -1,53 +1,55 @@
 from pyrogram import Client, filters
-from imgurpython import ImgurClient
-import logging
-import time
+from telegraph import Telegraph
 
-# Logging setup
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
-
-# Telegram API Details
-api_id = 26980824
-api_hash = 'fb044056059384d3bea54ab7ce915226'
+# Telegram API details
+api_id = '26980824'  # Replace with your API ID
+api_hash = 'fb044056059384d3bea54ab7ce915226'  # Replace with your API Hash
 bot_token = "7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI"
-channel_id = -1002374330304  # Replace with your channel ID
-
-# Imgur API Details
-imgur_client_id = "your_imgur_client_id"  # Replace with your Imgur Client ID
-imgur_client_secret = "your_imgur_client_secret"  # Replace with your Imgur Client Secret
-
-# Initialize Imgur Client
-imgur = ImgurClient(imgur_client_id, imgur_client_secret)
+channel_id = -1002374330304  # Your channel ID
 
 # Initialize Pyrogram Client
-app = Client("bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
+app = Client("my_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
+
+# Initialize Telegraph Client
+telegraph = Telegraph()
+telegraph.create_account(short_name='my_bot')
 
 @app.on_message(filters.chat(channel_id) & filters.photo)
-async def handle_photo(client, message):
+def photo_handler(client, message):
     try:
-        logging.info("Photo received.")
-        photo_file = await message.download()
-        logging.info("Photo downloaded: %s", photo_file)
-
-        # Upload photo to Imgur
-        logging.info("Uploading photo to Imgur...")
-        imgur_response = imgur.upload_from_path(photo_file, anon=True)
-        imgur_link = imgur_response['link']
-        logging.info("Imgur link created: %s", imgur_link)
-
-        # Add link to the caption
-        new_caption = (message.caption or "") + f"\n\n[Image Link]({imgur_link})"
-        await message.edit_caption(new_caption)
-        logging.info("Caption updated with Imgur link.")
-
+        # Get the file ID of the photo
+        file_id = message.photo.file_id
+        
+        # Download the photo
+        file = client.get_file(file_id)
+        file_path = file.file_path
+        
+        # Upload to Telegraph
+        response = telegraph.upload_file(file_path)
+        
+        # Get the URL of the uploaded photo
+        photo_url = response[0]['src']
+        
+        # Create a page with the uploaded photo URL
+        page = telegraph.create_page(
+            title="Uploaded Photo",
+            html_content=f"<img src='{photo_url}' />"
+        )
+        
+        # Get the URL of the created page
+        photo_link = f"https://telegra.ph/{page['path']}"
+        
+        # Edit the post in the channel with the link
+        client.edit_message_caption(
+            chat_id=message.chat.id,
+            message_id=message.message_id,
+            caption=f"Here is the uploaded photo: {photo_link}"
+        )
+        
+        print("Photo link created successfully and caption updated.")
+    
     except Exception as e:
-        logging.error("Error occurred: %s", str(e))
+        print(f"Error: {e}")
 
-@app.on_message(filters.command("start") & filters.private)
-async def start(client, message):
-    await message.reply("Bot is active and running!")
-    logging.info("Bot started successfully.")
-
-if __name__ == "__main__":
-    logging.info("Bot is starting...")
-    app.run()
+# Start the bot
+app.run()
