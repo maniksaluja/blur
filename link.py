@@ -28,6 +28,14 @@ async def handle_photo(client, message):
         return
 
     try:
+        # Verify the image
+        try:
+            image = Image.open(downloaded_file)
+            image.verify()  # Verify if the image is valid
+        except (IOError, SyntaxError) as e:
+            print(f"Invalid image file: {e}")
+            return
+        
         # Check file size
         file_size = os.path.getsize(downloaded_file)
         if file_size > MAX_FILE_SIZE:
@@ -40,9 +48,10 @@ async def handle_photo(client, message):
 
         # Upload image to Telegraph using HTTP POST request
         with open(downloaded_file, 'rb') as file:
-            response = requests.post('https://telegra.ph/upload', files={'file': file})
+            response = requests.post('https://telegra.ph/upload', files={'file': ('file.jpg', file, 'image/jpeg')})
         
         print(f"Response Status Code: {response.status_code}")
+        print(f"Response Headers: {response.headers}")
         print(f"Response Text: {response.text}")
 
         if response.status_code == 200:
