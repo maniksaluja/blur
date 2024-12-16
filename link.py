@@ -22,8 +22,13 @@ async def handle_photo(client, message):
         with open(downloaded_file, 'rb') as file:
             response = requests.post('https://telegra.ph/upload', files={'file': file})
 
-        if response.status_code == 200 and response.json():
+        print(f"Response Status Code: {response.status_code}")
+        print(f"Response Text: {response.text}")
+
+        if response.status_code == 200:
             result = response.json()
+            print(f"Response JSON: {result}")
+
             if isinstance(result, list) and len(result) > 0 and 'src' in result[0]:
                 # Extract image URL
                 image_url = f"https://telegra.ph{result[0]['src']}"
@@ -35,7 +40,8 @@ async def handle_photo(client, message):
             else:
                 print("Failed to upload image to Telegraph or response format is not valid")
         else:
-            print("Failed to upload image to Telegraph")
+            print(f"Failed to upload image to Telegraph. Status Code: {response.status_code}")
+            print(f"Response Text: {response.text}")
     except Exception as e:
         print(f"Error: {str(e)}")
 
