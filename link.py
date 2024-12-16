@@ -1,15 +1,8 @@
 import requests
 
-# Your bot token
-bot_token = "7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI"
-url = f"https://api.telegram.org/bot{bot_token}/getMe"
-
-response = requests.get(url)
-
-# Check if API is working
+# Make a simple GET request to the API to check if it's reachable
+response = requests.get('https://telegra.ph/')
 if response.status_code == 200:
-    print("API is working.")
-    print("Response:", response.json())
+    print("Telegraph API is working.")
 else:
-    print(f"API not working. Status Code: {response.status_code}")
-    print("Response:", response.json())
+    print(f"Telegraph API returned status code: {response.status_code}")
