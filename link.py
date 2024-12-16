@@ -1,3 +1,4 @@
+from pyrogram import filters
 from telegraph import Telegraph
 from pyrogram import Client
 
