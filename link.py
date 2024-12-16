@@ -32,7 +32,7 @@ async def handle_photo(client, message):
             
             # Edit the post with the uploaded image URL
             caption = f"Check out this photo: {image_url}"
-            await message.edit(caption=caption)
+            await client.edit_message_caption(chat_id=message.chat.id, message_id=message.message_id, caption=caption)
         else:
             print("Failed to upload image to Telegraph or response format is not valid")
     except Exception as e:
