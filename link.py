@@ -1,29 +1,53 @@
 from pyrogram import Client, filters
-import requests
+from imgurpython import ImgurClient
+import logging
+import time
 
-# Yeh Telegram bot ka token hai
-API_ID = '26980824'
-API_HASH = 'fb044056059384d3bea54ab7ce915226'
-BOT_TOKEN = '7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI'
-TELEGRAPH_ACCESS_TOKEN = '-1002374330304'
+# Logging setup
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
 
-app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+# Telegram API Details
+api_id = 26980824
+api_hash = 'fb044056059384d3bea54ab7ce915226'
+bot_token = "7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI"
+channel_id = -1002374330304  # Replace with your channel ID
 
-@app.on_message(filters.photo & filters.private)
-async def photo_handler(client, message):
-    await message.reply_text('Photo mili! Ab link create kar raha hoon...')
-    
-    # Photo URL prapt karte hain
-    photo = await client.download_media(message.photo.file_id)
-    
-    with open(photo, "rb") as file:
-        files = {"file": file}
-        response = requests.post("https://telegra.ph/upload", files=files)
-    
-    response_json = response.json()
-    telegraph_url = "https://telegra.ph" + response_json[0]['src']
-    
-    # Original message ka caption update karte hain
-    await message.edit_caption(caption=f'Link create kar diya: {telegraph_url}')
-    
-app.run()
+# Imgur API Details
+imgur_client_id = "your_imgur_client_id"  # Replace with your Imgur Client ID
+imgur_client_secret = "your_imgur_client_secret"  # Replace with your Imgur Client Secret
+
+# Initialize Imgur Client
+imgur = ImgurClient(imgur_client_id, imgur_client_secret)
+
+# Initialize Pyrogram Client
+app = Client("bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
+
+@app.on_message(filters.chat(channel_id) & filters.photo)
+async def handle_photo(client, message):
+    try:
+        logging.info("Photo received.")
+        photo_file = await message.download()
+        logging.info("Photo downloaded: %s", photo_file)
+
+        # Upload photo to Imgur
+        logging.info("Uploading photo to Imgur...")
+        imgur_response = imgur.upload_from_path(photo_file, anon=True)
+        imgur_link = imgur_response['link']
+        logging.info("Imgur link created: %s", imgur_link)
+
+        # Add link to the caption
+        new_caption = (message.caption or "") + f"\n\n[Image Link]({imgur_link})"
+        await message.edit_caption(new_caption)
+        logging.info("Caption updated with Imgur link.")
+
+    except Exception as e:
+        logging.error("Error occurred: %s", str(e))
+
+@app.on_message(filters.command("start") & filters.private)
+async def start(client, message):
+    await message.reply("Bot is active and running!")
+    logging.info("Bot started successfully.")
+
+if __name__ == "__main__":
+    logging.info("Bot is starting...")
+    app.run()
