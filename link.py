@@ -2,10 +2,10 @@ import requests
 from pyrogram import Client, filters
 
 # Your bot token and channel info
-API_ID = 'YOUR_API_ID'
-API_HASH = 'YOUR_API_HASH'
-BOT_TOKEN = 'YOUR_BOT_TOKEN'
-CHANNEL_ID = '@your_channel_id'  # Channel username or channel ID
+API_ID = '26980824'
+API_HASH = 'fb044056059384d3bea54ab7ce915226'
+BOT_TOKEN = '7041654616:AAHCsdChgpned-dlBEjv-OcOxSi_mY5HRjI'
+CHANNEL_ID = '-1002374330304'  # Channel username or channel ID
 
 # Function to upload the photo to Telegraph and get the link
 def upload_to_telegraph(photo_url):
