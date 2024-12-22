@@ -3,7 +3,7 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, InputMediaDocument
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger()
 
 # Bot initialization
@@ -29,30 +29,37 @@ def on_button_click(client, callback_query):
 @app.on_message(filters.channel & filters.chat(channel_id))
 def on_new_post(client, message):
     try:
-        if message.photo or message.document:  # If the message contains media
-            logger.info(f"New media uploaded in channel {channel_id}. Message ID: {message.message_id}")
-            
-            # Create an inline button
+        logger.debug(f"Received new message in channel {channel_id}. Message ID: {message.message_id}")
+
+        if message.photo:  # If the message contains a photo
+            logger.debug(f"Photo found in message ID: {message.message_id}")
             button = InlineKeyboardButton("Open DM", url="https://t.me/CuteGirlTG")
             keyboard = InlineKeyboardMarkup([[button]])
 
-            if message.photo:
-                media = InputMediaPhoto(message.photo.file_id)
-                logger.info(f"Photo media found in message ID: {message.message_id}")
-            elif message.document:
-                media = InputMediaDocument(message.document.file_id)
-                logger.info(f"Document media found in message ID: {message.message_id}")
-
-            # Add the button to the media message
+            # Add the button to the photo message
             client.edit_message_media(
                 chat_id=message.chat.id,
                 message_id=message.message_id,
-                media=media,
+                media=InputMediaPhoto(message.photo.file_id),
                 reply_markup=keyboard
             )
-            logger.info(f"Button added to message ID: {message.message_id}")
+            logger.info(f"Button added to photo message ID: {message.message_id}")
+        
+        elif message.document:  # If the message contains a document
+            logger.debug(f"Document found in message ID: {message.message_id}")
+            button = InlineKeyboardButton("Open DM", url="https://t.me/CuteGirlTG")
+            keyboard = InlineKeyboardMarkup([[button]])
+
+            # Add the button to the document message
+            client.edit_message_media(
+                chat_id=message.chat.id,
+                message_id=message.message_id,
+                media=InputMediaDocument(message.document.file_id),
+                reply_markup=keyboard
+            )
+            logger.info(f"Button added to document message ID: {message.message_id}")
         else:
-            logger.info(f"Non-media message received in channel {channel_id}. Message ID: {message.message_id}")
+            logger.debug(f"Message ID {message.message_id} does not contain a photo or document.")
     except Exception as e:
         logger.error(f"Error in on_new_post: {e}")
 
