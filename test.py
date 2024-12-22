@@ -1,5 +1,5 @@
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, InputMediaDocument
 
 # Bot initialization
 app = Client("my_bot", bot_token="7099022623:AAHF5XCTdVgREoJWvK6sRJedYIso35E0XpE")
@@ -23,8 +23,18 @@ def on_new_post(client, message):
         button = InlineKeyboardButton("Open DM", url="https://t.me/CuteGirlTG")
         keyboard = InlineKeyboardMarkup([[button]])
 
-        # Add the button to the message
-        message.edit_text(message.text if message.text else "Media Uploaded", reply_markup=keyboard)
+        if message.photo:
+            media = InputMediaPhoto(message.photo.file_id)
+        elif message.document:
+            media = InputMediaDocument(message.document.file_id)
+        
+        # Add the button to the media message
+        client.edit_message_media(
+            chat_id=message.chat.id,
+            message_id=message.message_id,
+            media=media,
+            reply_markup=keyboard
+        )
 
 # Run the bot
 app.run()
