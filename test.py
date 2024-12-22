@@ -2,7 +2,7 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Bot setup
-app = Client("my_bot", api_id="26980824", api_hash="fb044056059384d3bea54ab7ce915226'", bot_token="7099022623:AAHF5XCTdVgREoJWvK6sRJedYIso35E0XpE")
+app = Client("my_bot", api_id=26980824, api_hash="fb044056059384d3bea54ab7ce915226", bot_token="7099022623:AAHF5XCTdVgREoJWvK6sRJedYIso35E0XpE")
 
 # Replace with your target username (user to DM)
 target_username = "god_father11"
