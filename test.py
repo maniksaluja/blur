@@ -1,69 +1,31 @@
-import logging
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler
 
-# Enable logging for debugging
-logging.basicConfig(level=logging.DEBUG)
+# Your Bot Token
+TOKEN = '7099022623:AAHF5XCTdVgREoJWvK6sRJedYIso35E0XpE'
+# Channel ID (e.g., @YourChannel)
+CHANNEL_ID = '-1002385675587'
 
-# Bot setup
-app = Client("my_bot", api_id=26980824, api_hash="fb044056059384d3bea54ab7ce915226", bot_token="7099022623:AAHF5XCTdVgREoJWvK6sRJedYIso35E0XpE")
+# Define the link you want to open
+link = "https://t.me/CuteGirlTG"
 
-# Replace with your target username (user to DM)
-target_username = "god_father11"
+def post_with_button(update, context):
+    # Create a button with the link
+    keyboard = [
+        [InlineKeyboardButton("Click to Open Link", url=link)]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-@app.on_message(filters.chat("-1002385675587"))
-async def add_button(client, message):
-    """
-    Detect channel messages and add a button with a redirect functionality.
-    """
-    try:
-        # Debugging: Check if message is detected
-        print("Message detected:", message.text or "Non-text message")
+    # Post the message to your channel with the button
+    context.bot.send_message(chat_id=CHANNEL_ID, text="Click the button below:", reply_markup=reply_markup)
 
-        # Add button
-        button = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Redirect to DM", callback_data=f"redirect_{message.message_id}")]]
-        )
-        await message.reply_text(
-            "Click the button below to visit the DM.",
-            reply_markup=button,
-            quote=True,
-        )
-    except Exception as e:
-        logging.error(f"Error in add_button: {e}")
+def main():
+    updater = Updater(TOKEN, use_context=True)
+    dp = updater.dispatcher
+    dp.add_handler(CommandHandler("post", post_with_button))  # '/post' command to trigger the function
 
-@app.on_callback_query(filters.regex(r"redirect_\d+"))
-async def handle_redirect(client, callback_query):
-    """
-    Handle the button click event and send a DM with the tagged post link.
-    """
-    try:
-        # Extract message ID and channel ID
-        message_id = int(callback_query.data.split("_")[1])  # Extract message_id from callback_data
-        channel_id = callback_query.message.chat.id
-        tag_link = f"https://t.me/c/{str(channel_id)[4:]}/{message_id}"  # Create tag link for the post
+    updater.start_polling()
+    updater.idle()
 
-        # Debugging: Log the tag link
-        print(f"Generated tag link: {tag_link}")
-
-        # Send message in target user's DM with the tagged post link
-        await client.send_message(
-            target_username,
-            f"User clicked the button for this post: [View Post]({tag_link})",
-            parse_mode="markdown"
-        )
-        await callback_query.answer("Redirected to DM!")  # Notify user
-    except Exception as e:
-        logging.error(f"Error in handle_redirect: {e}")
-
-@app.on_message(filters.command("check_id"))
-async def check_channel_id(client, message):
-    """
-    Helper command to check channel ID.
-    """
-    try:
-        await message.reply_text(f"Channel ID: {message.chat.id}")
-    except Exception as e:
-        logging.error(f"Error in check_channel_id: {e}")
-
-app.run()
+if __name__ == '__main__':
+    main()
