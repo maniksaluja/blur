@@ -14,8 +14,8 @@ CHANNEL_ID = '-1002385675587'
 link = "https://t.me/CuteGirlTG"
 
 async def add_button_to_post(update, context):
-    # Check if the message is from the channel
-    if update.message.chat.id == int(CHANNEL_ID):
+    # Check if the message exists and if it's from the correct channel
+    if update.message and update.message.chat and update.message.chat.id == int(CHANNEL_ID):
         # Create a button with the link
         keyboard = [
             [InlineKeyboardButton("Click to Open Link", url=link)]
