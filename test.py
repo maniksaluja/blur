@@ -1,35 +1,41 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, Application, MessageHandler, filters
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-# Replace this with your channel ID and target username
-CHANNEL_ID = "-1002385675587"
-TARGET_USERNAME = "iamgojoof6eyes"
+# Bot setup
+app = Client("my_bot", api_id="YOUR_API_ID", api_hash="YOUR_API_HASH", bot_token="YOUR_BOT_TOKEN")
 
-def start(update: Update, context):
-    update.message.reply_text('Hello! Main tumhara Telegram bot hoon. Tum kya karna chahte ho?')
+# Replace with your target username (user to DM)
+target_username = "example_username"
 
-def post(update: Update, context):
-    button = InlineKeyboardButton("Message me", callback_data="message_me")
-    reply_markup = InlineKeyboardMarkup([[button]])
-    context.bot.send_message(chat_id=CHANNEL_ID, text='Click the button to message the user.', reply_markup=reply_markup)
+@app.on_message(filters.chat("YOUR_CHANNEL_ID"))
+async def add_button(client, message):
+    """
+    Detect channel messages and add a button with a redirect functionality.
+    """
+    button = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("Redirect to DM", callback_data=f"redirect_{message.message_id}")]]
+    )
+    await message.reply_text(
+        "Click the button below to visit the DM.",
+        reply_markup=button,
+        quote=True,
+    )
 
-def button(update: Update, context):
-    query = update.callback_query
-    user_id = query.from_user.id
-    query.edit_message_text(text=f"Redirecting to user {TARGET_USERNAME}")
+@app.on_callback_query(filters.regex(r"redirect_\d+"))
+async def handle_redirect(client, callback_query):
+    """
+    Handle the button click event and send a DM with the tagged post link.
+    """
+    message_id = int(callback_query.data.split("_")[1])  # Extract message_id from callback_data
+    channel_id = callback_query.message.chat.id
+    tag_link = f"https://t.me/c/{str(channel_id)[4:]}/{message_id}"  # Create tag link for the post
 
-    # Send DM to the target user with the reply tag
-    context.bot.send_message(chat_id=f"@{TARGET_USERNAME}", text=f"Yeh message aapko DM mein mila hai.\n\nReply: {query.message.reply_to_message.text}")
+    # Send message in target user's DM with the tagged post link
+    await client.send_message(
+        target_username,
+        f"User clicked the button for this post: [View Post]({tag_link})",
+        parse_mode="markdown"
+    )
+    await callback_query.answer("Redirected to DM!")  # Notify user
 
-def main():
-    application = Application.builder().token("7099022623:AAHF5XCTdVgREoJWvK6sRJedYIso35E0XpE").build()
-
-    dp = application.add_handler
-    dp(CommandHandler("start", start))
-    dp(CommandHandler("post", post))
-    dp(CallbackQueryHandler(button))
-
-    application.run_polling()
-
-if __name__ == '__main__':
-    main()
+app.run()
