@@ -1,9 +1,14 @@
 import nest_asyncio
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, MessageHandler, filters
+import logging
 
 # Apply nest_asyncio to allow nested event loops
 nest_asyncio.apply()
+
+# Enable logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Your Bot Token
 TOKEN = '7099022623:AAHF5XCTdVgREoJWvK6sRJedYIso35E0XpE'
@@ -16,11 +21,17 @@ link = "https://t.me/CuteGirlTG"
 async def add_button_to_post(update, context):
     # Check if the message exists and if it's from the correct channel
     if update.message and update.message.chat and update.message.chat.id == int(CHANNEL_ID):
+        # Log when the bot processes a message
+        logger.info(f"Received message in channel {CHANNEL_ID}: {update.message.text}")
+
         # Create a button with the link
         keyboard = [
             [InlineKeyboardButton("Click to Open Link", url=link)]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
+
+        # Log before editing the message
+        logger.info("Adding button to the post...")
 
         # Edit the message with the button
         await context.bot.edit_message_text(
@@ -30,8 +41,14 @@ async def add_button_to_post(update, context):
             reply_markup=reply_markup
         )
 
+        # Log after the button is added
+        logger.info("Button added successfully!")
+
 async def main():
     application = Application.builder().token(TOKEN).build()
+
+    # Log bot startup
+    logger.info("Bot started successfully!")
 
     # Listen for new messages in the channel
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, add_button_to_post))
