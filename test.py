@@ -21,8 +21,8 @@ link = "https://t.me/CuteGirlTG"
 async def add_button_to_post(update: Update, context: CallbackContext):
     try:
         # Check if the message exists and if it's from the correct channel
-        if update.message and update.message.chat.type == 'channel' and update.message.chat.id == int(CHANNEL_ID):
-            logger.info(f"Message received: {update.message.text}")
+        if update.channel_post and update.channel_post.chat.id == int(CHANNEL_ID):
+            logger.info(f"Message received: {update.channel_post.text}")
             
             # Create a button with the link
             keyboard = [
@@ -35,16 +35,16 @@ async def add_button_to_post(update: Update, context: CallbackContext):
 
             # Edit the message with the button
             await context.bot.edit_message_text(
-                chat_id=update.message.chat.id,
-                message_id=update.message.message_id,
-                text=update.message.text,
+                chat_id=update.channel_post.chat.id,
+                message_id=update.channel_post.message_id,
+                text=update.channel_post.text,
                 reply_markup=reply_markup
             )
 
             # Log after the button is added
             logger.info("Button added successfully!")
         else:
-            logger.warning(f"Message not from the correct channel or does not exist! Message chat_id: {update.message.chat.id if update.message else 'None'}")
+            logger.warning(f"Message not from the correct channel or does not exist! Message chat_id: {update.channel_post.chat.id if update.channel_post else 'None'}")
     except Exception as e:
         logger.error(f"Error occurred while adding button: {e}")
 
@@ -55,7 +55,7 @@ async def main():
     logger.info("Bot started successfully!")
 
     # Listen for new messages in the channel
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, add_button_to_post))
+    application.add_handler(MessageHandler(filters.ALL, add_button_to_post))
 
     # Run polling without asyncio.run()
     await application.run_polling()
