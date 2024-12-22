@@ -1,5 +1,9 @@
+import nest_asyncio
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, MessageHandler, filters
+
+# Apply nest_asyncio to allow nested event loops
+nest_asyncio.apply()
 
 # Your Bot Token
 TOKEN = '7099022623:AAHF5XCTdVgREoJWvK6sRJedYIso35E0XpE'
@@ -37,5 +41,5 @@ async def main():
 
 if __name__ == '__main__':
     import asyncio
-    # Run the application directly without asyncio.run()
+    # Run the application with nest_asyncio
     asyncio.get_event_loop().run_until_complete(main())
