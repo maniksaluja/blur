@@ -1,6 +1,6 @@
 import nest_asyncio
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, MessageHandler, filters
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import Application, MessageHandler, filters, CallbackContext
 import logging
 
 # Apply nest_asyncio to allow nested event loops
@@ -18,38 +18,33 @@ CHANNEL_ID = '-1002385675587'
 # Define the link you want to open
 link = "https://t.me/CuteGirlTG"
 
-async def add_button_to_post(update, context):
+async def add_button_to_post(update: Update, context: CallbackContext):
     try:
         # Check if the message exists and if it's from the correct channel
-        if update.message:
+        if update.message and update.message.chat.type == 'channel' and update.message.chat.id == int(CHANNEL_ID):
             logger.info(f"Message received: {update.message.text}")
-            if update.message.chat and update.message.chat.id == int(CHANNEL_ID):
-                # Log when the bot processes a message
-                logger.info(f"Processing message in channel {CHANNEL_ID} with text: {update.message.text}")
+            
+            # Create a button with the link
+            keyboard = [
+                [InlineKeyboardButton("Click to Open Link", url=link)]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
 
-                # Create a button with the link
-                keyboard = [
-                    [InlineKeyboardButton("Click to Open Link", url=link)]
-                ]
-                reply_markup = InlineKeyboardMarkup(keyboard)
+            # Log before editing the message
+            logger.info("Attempting to add button to the post...")
 
-                # Log before editing the message
-                logger.info("Attempting to add button to the post...")
+            # Edit the message with the button
+            await context.bot.edit_message_text(
+                chat_id=update.message.chat.id,
+                message_id=update.message.message_id,
+                text=update.message.text,
+                reply_markup=reply_markup
+            )
 
-                # Edit the message with the button
-                await context.bot.edit_message_text(
-                    chat_id=CHANNEL_ID,
-                    message_id=update.message.message_id,
-                    text=update.message.text,
-                    reply_markup=reply_markup
-                )
-
-                # Log after the button is added
-                logger.info("Button added successfully!")
-            else:
-                logger.warning(f"Message not from the correct channel! Message chat_id: {update.message.chat.id}")
+            # Log after the button is added
+            logger.info("Button added successfully!")
         else:
-            logger.warning("Received NoneType message, skipping...")
+            logger.warning(f"Message not from the correct channel or does not exist! Message chat_id: {update.message.chat.id if update.message else 'None'}")
     except Exception as e:
         logger.error(f"Error occurred while adding button: {e}")
 
