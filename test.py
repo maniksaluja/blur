@@ -2,12 +2,12 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Bot setup
-app = Client("my_bot", api_id="YOUR_API_ID", api_hash="YOUR_API_HASH", bot_token="YOUR_BOT_TOKEN")
+app = Client("my_bot", api_id="26980824", api_hash="fb044056059384d3bea54ab7ce915226'", bot_token="7099022623:AAHF5XCTdVgREoJWvK6sRJedYIso35E0XpE")
 
 # Replace with your target username (user to DM)
-target_username = "example_username"
+target_username = "god_father11"
 
-@app.on_message(filters.chat("YOUR_CHANNEL_ID"))
+@app.on_message(filters.chat("-1002385675587"))
 async def add_button(client, message):
     """
     Detect channel messages and add a button with a redirect functionality.
