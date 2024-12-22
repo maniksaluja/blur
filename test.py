@@ -2,8 +2,8 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
 
 # Replace this with your channel ID and target username
-CHANNEL_ID = "YOUR_CHANNEL_ID"
-TARGET_USERNAME = "TARGET_USERNAME"
+CHANNEL_ID = "-1002385675587"
+TARGET_USERNAME = "iamgojoof6eyes"
 
 def start(update: Update, context):
     update.message.reply_text('Hello! Main tumhara Telegram bot hoon. Tum kya karna chahte ho?')
@@ -22,7 +22,7 @@ def button(update: Update, context):
     context.bot.send_message(chat_id=f"@{TARGET_USERNAME}", text=f"Yeh message aapko DM mein mila hai.\n\nReply: {query.message.reply_to_message.text}")
 
 def main():
-    updater = Updater("YOUR_TELEGRAM_BOT_TOKEN", use_context=True)
+    updater = Updater("7099022623:AAHF5XCTdVgREoJWvK6sRJedYIso35E0XpE", use_context=True)
 
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("start", start))
