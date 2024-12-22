@@ -32,8 +32,10 @@ async def main():
     # Listen for new messages in the channel
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, add_button_to_post))
 
+    # Run polling without asyncio.run()
     await application.run_polling()
 
 if __name__ == '__main__':
     import asyncio
-    asyncio.run(main())
+    # Run the application directly without asyncio.run()
+    asyncio.get_event_loop().run_until_complete(main())
