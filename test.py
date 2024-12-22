@@ -1,5 +1,5 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, Application, MessageHandler, filters
 
 # Replace this with your channel ID and target username
 CHANNEL_ID = "-1002385675587"
@@ -22,15 +22,14 @@ def button(update: Update, context):
     context.bot.send_message(chat_id=f"@{TARGET_USERNAME}", text=f"Yeh message aapko DM mein mila hai.\n\nReply: {query.message.reply_to_message.text}")
 
 def main():
-    updater = Updater("7099022623:AAHF5XCTdVgREoJWvK6sRJedYIso35E0XpE", use_context=True)
+    application = Application.builder().token("7099022623:AAHF5XCTdVgREoJWvK6sRJedYIso35E0XpE").build()
 
-    dp = updater.dispatcher
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("post", post))
-    dp.add_handler(CallbackQueryHandler(button))
+    dp = application.add_handler
+    dp(CommandHandler("start", start))
+    dp(CommandHandler("post", post))
+    dp(CallbackQueryHandler(button))
 
-    updater.start_polling()
-    updater.idle()
+    application.run_polling()
 
 if __name__ == '__main__':
     main()
