@@ -1,66 +1,30 @@
-import nest_asyncio
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import Application, MessageHandler, filters, CallbackContext
-import logging
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-# Apply nest_asyncio to allow nested event loops
-nest_asyncio.apply()
+# Bot initialization
+app = Client("my_bot", bot_token="7099022623:AAHF5XCTdVgREoJWvK6sRJedYIso35E0XpE")
 
-# Enable logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Channel ID or username
+channel_id = "-1002385675587"
 
-# Your Bot Token
-TOKEN = '7099022623:AAHF5XCTdVgREoJWvK6sRJedYIso35E0XpE'
-# Channel ID (e.g., @YourChannel)
-CHANNEL_ID = '-1002385675587'
+# Callback function when the button is pressed
+@app.on_callback_query()
+def on_button_click(client, callback_query):
+    if callback_query.data == "open_dm":
+        callback_query.message.reply_text("Opening your DM...")
+        client.send_message(callback_query.from_user.id, "https://t.me/CuteGirlTG")
+        callback_query.answer()
 
-# Define the link you want to open
-link = "https://t.me/CuteGirlTG"
+# Function to monitor new posts in the channel
+@app.on_message(filters.channel & filters.chat(channel_id))
+def on_new_post(client, message):
+    if message.photo or message.document:  # If the message contains media
+        # Create an inline button
+        button = InlineKeyboardButton("Open DM", url="https://t.me/CuteGirlTG")
+        keyboard = InlineKeyboardMarkup([[button]])
 
-async def add_button_to_post(update: Update, context: CallbackContext):
-    try:
-        # Check if the message exists and if it's from the correct channel
-        if update.channel_post and update.channel_post.chat.id == int(CHANNEL_ID):
-            logger.info(f"Message received: {update.channel_post.text}")
-            
-            # Create a button with the link
-            keyboard = [
-                [InlineKeyboardButton("Click to Open Link", url=link)]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
+        # Add the button to the message
+        message.edit_text(message.text if message.text else "Media Uploaded", reply_markup=keyboard)
 
-            # Log before editing the message
-            logger.info("Attempting to add button to the post...")
-
-            # Edit the message with the button
-            await context.bot.edit_message_text(
-                chat_id=update.channel_post.chat.id,
-                message_id=update.channel_post.message_id,
-                text=update.channel_post.text,
-                reply_markup=reply_markup
-            )
-
-            # Log after the button is added
-            logger.info("Button added successfully!")
-        else:
-            logger.warning(f"Message not from the correct channel or does not exist! Message chat_id: {update.channel_post.chat.id if update.channel_post else 'None'}")
-    except Exception as e:
-        logger.error(f"Error occurred while adding button: {e}")
-
-async def main():
-    application = Application.builder().token(TOKEN).build()
-
-    # Log bot startup
-    logger.info("Bot started successfully!")
-
-    # Listen for new messages in the channel
-    application.add_handler(MessageHandler(filters.ALL, add_button_to_post))
-
-    # Run polling without asyncio.run()
-    await application.run_polling()
-
-if __name__ == '__main__':
-    import asyncio
-    # Run the application with nest_asyncio
-    asyncio.get_event_loop().run_until_complete(main())
+# Run the bot
+app.run()
